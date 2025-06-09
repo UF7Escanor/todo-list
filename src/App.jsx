@@ -1,91 +1,69 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import Board from "./component/board.jsx";
+import "./App.css";
+
+const WINNING_COMBOS = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8], // rows
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8], // columns
+  [0, 4, 8],
+  [2, 4, 6], // diagonals
+];
 
 function App() {
-  const [task, setTask] = useState([
-    "Eat Breakfast",
-    "Take Shower",
-    "play football",
-  ]);
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isXTurn, setIsXTurn] = useState(true);
+  const [winner, setWinner] = useState(null);
 
-  const [newTask, setNewTask] = useState("");
+  const handleClick = (index) => {
+    if (board[index] || winner) return;
 
-  function handelInputchange(e) {
-    setNewTask(e.target.value);
-  }
-  function addTask() {
-    if (newTask.trim() !== "") {
-      setTask((prev) => [...prev, newTask]);
-      setNewTask("");
+    const newBoard = [...board];
+    newBoard[index] = isXTurn ? "X" : "O";
+
+    setBoard(newBoard);
+    setIsXTurn(!isXTurn);
+
+    const win = checkWinner(newBoard);
+    if (win) setWinner(win);
+  };
+
+  const checkWinner = (board) => {
+    for (let combo of WINNING_COMBOS) {
+      const [a, b, c] = combo;
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a]; // X or O
+      }
     }
-  }
-  function deleteTask(index) {
-    const updatedTask = task.filter((element, i) => i !== index);
-    setTask(updatedTask);
-  }
-  function moveTaskUp(index) {
-    if (index > 0) {
-      const updatedTask = [...task];
 
-      [updatedTask[index], updatedTask[index - 1]] = [
-        updatedTask[index - 1],
-        updatedTask[index],
-      ];
-      setTask(updatedTask);
+    if (board.every((cell) => cell !== null)) {
+      return "draw";
     }
-  }
-  function moveTaskDown(index) {
-    if (index < task.length - 1) {
-      const updatedTask = [...task];
 
-      [updatedTask[index], updatedTask[index + 1]] = [
-        updatedTask[index + 1],
-        updatedTask[index],
-      ];
+    return null;
+  };
 
-      setTask(updatedTask);
-    }
-  }
-
-  // function addTask() {
-  //   setTask((prev) => [...prev, newTask]);
-  // }
-  // function delTask(index) {
-  //   setTask((aaa) => aaa.filter((_, i) => i != index));
-  // }
-  // function moveTaskUp(index) {
-  //   setTask((prev) => {
-  //     const updated = [...prev];
-
-  //     updated[index] = newTask;
-
-  //     return updated;
-  //   });
-  // }
-  // function moveTaskDown(index) {}
+  const resetGame = () => {
+    setBoard(Array(9).fill(null));
+    setIsXTurn(true);
+    setWinner(null);
+  };
 
   return (
-    <div>
-      <h1>TO-DO List</h1>
-
-      <div>
-        <input
-          type="text"
-          placeholder="Enter a task"
-          value={newTask}
-          onChange={(e) => handelInputchange(e)}
-        />
-        <button onClick={addTask}>Add</button>
-      </div>
-      <ol>
-        {task.map((task, index) => (
-          <li key={index}>
-            <span className="text">{task}</span>
-            <button onClick={() => deleteTask(index)}>❌</button>
-            <button onClick={() => moveTaskUp(index)}>☝️</button>
-            <button onClick={() => moveTaskDown(index)}>👇</button>
-          </li>
-        ))}
-      </ol>
+    <div className="game">
+      <h1>Tic Tac Toe</h1>
+      <Board board={board} onClick={handleClick} />
+      <p>
+        {winner
+          ? winner === "draw"
+            ? "It's a draw!"
+            : `${winner} wins!`
+          : `Turn: ${isXTurn ? "X" : "O"}`}
+      </p>
+      <button onClick={resetGame}>Restart</button>
     </div>
   );
 }
